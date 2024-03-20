@@ -51,10 +51,19 @@ def do_math(numbers_input):
     return result
 
 current_result = 0
-while current_result != wanted_result:
-    current_result = do_math(numbers)
+tries = 0
+max_tries = 5000000
 
-print('----------------------\n')
-print("".join(log_results))
-print(f"Result: {current_result}")
+while current_result != wanted_result and tries < max_tries:
+    current_result = do_math(numbers)
+    tries += 1
+
+if tries == max_tries:
+    print("Maximum tries reached. Solution not found.")
+else:
+    print('----------------------\n')
+    print("".join(log_results))
+    print(f"Result: {current_result}")
+    print('----------------------\n')
+
 logfile.close()
