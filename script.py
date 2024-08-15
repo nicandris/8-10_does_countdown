@@ -1,10 +1,13 @@
 import random
 
-logfile = open('./logfile.txt', 'w+')
+logfile = open('./logfile.txt', 'a')
 
 numbers = [int(input("Enter number: ")) for _ in range(6)]
 wanted_result = int(input("Enter the result: "))
 
+logfile.write('\n')
+logfile.write('----------------------\n')
+logfile.write('\n')
 logfile.write(f"{numbers}\n")
 logfile.write(f"{wanted_result}\n\n")
 
@@ -64,6 +67,7 @@ else:
     print('----------------------\n')
     print("".join(log_results))
     print(f"Result: {current_result}")
+    print(f"Combinations tried: {tries}")
     print('----------------------\n')
 
 logfile.close()
