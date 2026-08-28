@@ -59,13 +59,15 @@ would write them down.
 
 ## Tests
 
-`python test_solver.py` — plain asserts, no framework needed, about a second.
+`python test_solver.py` — plain asserts, no framework needed, a few seconds.
 
-The important one checks the solver against a deliberately naive brute force
-across four games and every target from 1 to 400: each reachable target must be
-hit exactly, and each unreachable one must return the genuinely closest value and
-never a fabricated match. Every answer is also replayed step by step to confirm
-the working only uses numbers actually available and adds up.
+The suite plays 125 real games: 100 that must be solved exactly and 25 that cannot
+be made at all, where the closest reachable value is required instead. Nothing is
+taken on trust — two independent oracles, a naive brute force and a bottom-up
+subset search, re-derive what each answer should be, so a wrong expectation fails
+the suite rather than quietly agreeing with the solver. Every answer is replayed
+step by step to confirm the working only uses numbers actually available and
+adds up.
 
 ## A note on the old version
 
