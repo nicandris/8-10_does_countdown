@@ -1,73 +1,91 @@
-import random
+"""8 Out of 10 Cats Does Countdown numbers solver.
 
-logfile = open('./logfile.txt', 'a')
+Exhaustive depth-first search over every pair/operator combination, so it
+finds an exact solution if one exists (or the closest reachable value if not),
+including solutions that use only some of the numbers.
 
-numbers = [int(input("Enter number: ")) for _ in range(6)]
-wanted_result = int(input("Enter the result: "))
+    python script.py 25 50 75 100 3 6 952
+    python script.py                        # interactive
+"""
+import sys
+import time
 
-logfile.write('\n')
-logfile.write('----------------------\n')
-logfile.write('\n')
-logfile.write(f"{numbers}\n")
-logfile.write(f"{wanted_result}\n\n")
 
-# Define the function blocks
-def addition(x, y):
-    return x + y, f"{x} + {y} = {x + y}\n"
+def solve(numbers, target):
+    """Return (value, steps) for the best reachable value. Exact match ends the search."""
+    best = None
+    seen_states = set()
 
-def subtraction(x, y):
-    return x - y, f"{x} - {y} = {x - y}\n"
+    def consider(value, steps):
+        nonlocal best
+        if best is None or abs(value - target) < abs(best[0] - target) or (
+            abs(value - target) == abs(best[0] - target) and len(steps) < len(best[1])
+        ):
+            best = (value, steps)
+        return value == target
 
-def multiplication(x, y):
-    return x * y, f"{x} * {y} = {x * y}\n"
+    def search(items):
+        # items: list of (value, steps) — steps is the working that produced value
+        state = tuple(sorted(v for v, _ in items))
+        if state in seen_states:
+            return False
+        seen_states.add(state)
 
-def division(x, y):
-    if y != 0 and x % y == 0:
-        return x / y, f"{x} / {y} = {x / y}\n"
+        for i in range(len(items)):
+            for j in range(i + 1, len(items)):
+                a, sa = items[i]
+                b, sb = items[j]
+                if a < b:
+                    (a, sa), (b, sb) = (b, sb), (a, sa)
+                rest = [items[k] for k in range(len(items)) if k != i and k != j]
+                history = sa + sb
+
+                candidates = [(a + b, '+'), (a * b, '*')] if b != 1 else [(a + b, '+')]
+                if a != b:
+                    candidates.append((a - b, '-'))
+                if b != 1 and a % b == 0:
+                    candidates.append((a // b, '/'))
+
+                for value, op in candidates:
+                    steps = history + (f"{a} {op} {b} = {value}",)
+                    if consider(value, steps):
+                        return True
+                    if rest and search(rest + [(value, steps)]):
+                        return True
+        return False
+
+    for n in numbers:
+        if consider(n, ()):
+            return best
+    search([(n, ()) for n in numbers])
+    return best
+
+
+def report(numbers, target, value, steps, elapsed):
+    lines = [
+        '----------------------',
+        f"{numbers} : {target}",
+        '----------------------',
+        *steps,
+        '',
+        f"Result: {value}" + ('' if value == target else f" (off by {abs(value - target)})"),
+        f"Solved in {elapsed:.3f}s",
+        '----------------------',
+    ]
+    return '\n'.join(lines) + '\n'
+
+
+if __name__ == '__main__':
+    args = [int(a) for a in sys.argv[1:]]
+    if args:
+        *numbers, target = args
     else:
-        return options[random.randint(0, 2)](x, y)
+        numbers = [int(input("Enter number: ")) for _ in range(6)]
+        target = int(input("Enter the result: "))
 
-# Map the inputs to the function blocks
-options = {
-    0: addition,
-    1: subtraction,
-    2: multiplication,
-    3: division,
-}
-
-log_results = []
-
-def do_math(numbers_input):
-    test_numbers = numbers_input.copy()
-    random.shuffle(test_numbers)
-    log_results.clear()
-
-    while len(test_numbers) > 1:
-        results = options[random.randint(0, 3)](test_numbers.pop(), test_numbers.pop())
-        test_numbers.append(results[0])
-        log_results.append(results[1])
-
-    result = int(test_numbers[0])
-    if result == wanted_result:
-        logfile.writelines(log_results)
-        logfile.write(f"\nResult: {result}\n")
-    return result
-
-current_result = 0
-tries = 0
-max_tries = 5000000
-
-while current_result != wanted_result and tries < max_tries:
-    current_result = do_math(numbers)
-    tries += 1
-
-if tries == max_tries:
-    print("Maximum tries reached. Solution not found.")
-else:
-    print('----------------------\n')
-    print("".join(log_results))
-    print(f"Result: {current_result}")
-    print(f"Combinations tried: {tries}")
-    print('----------------------\n')
-
-logfile.close()
+    t0 = time.perf_counter()
+    value, steps = solve(numbers, target)
+    output = report(numbers, target, value, steps, time.perf_counter() - t0)
+    print('\n' + output)
+    with open('./logfile.txt', 'a') as logfile:
+        logfile.write('\n' + output)
