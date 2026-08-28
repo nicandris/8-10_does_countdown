@@ -20,10 +20,24 @@ jobs:
       - name: Show the results in the run summary
         if: always()
         run: |
+          demo() {
+            local heading=$1
+            shift
+            echo "### $heading"
+            echo
+            echo '```console'
+            echo "$ python script.py $*"
+            python3 script.py "$@"
+            echo '```'
+            echo
+          }
           {
             echo "## Countdown solver tests"
             echo
             echo '```'
             cat results.txt
             echo '```'
+            echo
+            demo "A game it solves" 25 50 75 100 3 6 952
+            demo "A game nobody can solve, so it gets as close as possible" 1 3 7 10 25 50 831
           } >> "$GITHUB_STEP_SUMMARY"
