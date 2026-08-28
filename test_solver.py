@@ -1,7 +1,11 @@
 """Tests for the Countdown solver: python3 test_solver.py (or pytest)."""
+import json
+import pathlib
 import time
 
 from script import solve
+
+GAMES = json.loads((pathlib.Path(__file__).parent / 'games.json').read_text())
 
 
 def brute_force(numbers):
@@ -21,6 +25,33 @@ def brute_force(numbers):
             for value in values:
                 reached |= brute_force(rest + (value,))
     return reached
+
+
+def reachable_by_subset(numbers):
+    """Second oracle: bottom-up over every subset, the opposite direction to the solver."""
+    size = len(numbers)
+    values = [set() for _ in range(1 << size)]
+    for i, number in enumerate(numbers):
+        values[1 << i] = {number}
+    for mask in range(1, 1 << size):
+        if mask & (mask - 1) == 0:
+            continue  # a single number, already seeded
+        out = values[mask]
+        sub = (mask - 1) & mask
+        while sub:
+            other = mask ^ sub
+            if sub < other:  # look at each split once
+                for x in values[sub]:
+                    for y in values[other]:
+                        lo, hi = (y, x) if x > y else (x, y)
+                        out.add(hi + lo)
+                        out.add(hi * lo)
+                        if hi - lo > 0:
+                            out.add(hi - lo)
+                        if lo and hi % lo == 0:
+                            out.add(hi // lo)
+            sub = (sub - 1) & mask
+    return set().union(*values)
 
 
 def check_working(numbers, value, steps):
@@ -92,6 +123,36 @@ def test_agrees_with_brute_force():
                 assert abs(value - target) == min(abs(v - target) for v in reachable), (
                     f"{numbers}: {value} is not the closest to {target}"
                 )
+
+
+def test_solves_a_hundred_real_games():
+    for numbers, target in GAMES['solvable']:
+        value, steps = solve(numbers, target)
+        assert value == target, f"{numbers} -> {target}: got {value}"
+        check_working(numbers, value, steps)
+
+
+def test_gets_closest_on_twenty_five_impossible_games():
+    for numbers, target, closest in GAMES['unsolvable']:
+        value, steps = solve(numbers, target)
+        assert value != target, f"{numbers} -> {target} is impossible, but got a match"
+        # Ties are real: 834 and 838 are equally good for 836, and score the same.
+        assert abs(value - target) == abs(closest - target), (
+            f"{numbers} -> {target}: got {value}, no better than {closest} was available"
+        )
+        check_working(numbers, value, steps)
+
+
+def test_the_game_table_is_not_taken_on_trust():
+    """Re-derive every recorded game with the subset oracle, so the corpus can't rot."""
+    for numbers, target in GAMES['solvable']:
+        assert target in reachable_by_subset(numbers), f"{numbers} -> {target} is not solvable"
+    for numbers, target, closest in GAMES['unsolvable']:
+        reachable = reachable_by_subset(numbers)
+        assert target not in reachable, f"{numbers} -> {target} is solvable after all"
+        assert min(abs(v - target) for v in reachable) == abs(closest - target), (
+            f"{numbers} -> {target}: {closest} is not the closest reachable value"
+        )
 
 
 def test_finishes_fast_even_with_no_solution():
