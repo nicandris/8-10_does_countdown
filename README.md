@@ -7,22 +7,9 @@ It searches every combination exhaustively, so if a solution exists it finds it,
 and if none exists it tells you the closest you can get. A whole round takes
 about a tenth of a second.
 
-```console
-$ python script.py 25 50 75 100 3 6 952
-
-----------------------
-[25, 50, 75, 100, 3, 6] : 952
-----------------------
-75 * 3 = 225
-100 + 6 = 106
-225 * 106 = 23850
-23850 - 50 = 23800
-23800 / 25 = 952
-
-Result: 952
-Solved in 0.140s
-----------------------
-```
+<p align="center">
+  <img src="assets/preview.png" alt="Solving 952 from 25, 50, 75, 100, 3 and 6" width="640">
+</p>
 
 ## Running it
 
