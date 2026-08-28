@@ -10,7 +10,7 @@ search of a six-number game takes about 0.1s.
 ```
 python script.py 25 50 75 100 3 6 952   # one shot
 python script.py                        # interactive prompts
-python script.py --test                 # self-check
+python test_solver.py                   # tests
 ```
 
 ![Alt Text](/assets/preview.png)

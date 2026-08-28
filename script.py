@@ -6,7 +6,6 @@ including solutions that use only some of the numbers.
 
     python script.py 25 50 75 100 3 6 952
     python script.py                        # interactive
-    python script.py --test                 # self-check
 """
 import sys
 import time
@@ -76,27 +75,7 @@ def report(numbers, target, value, steps, elapsed):
     return '\n'.join(lines) + '\n'
 
 
-def test():
-    value, steps = solve([25, 50, 75, 100, 3, 6], 952)
-    assert value == 952, value
-    assert len(steps) == 5, steps
-    # Uses a subset: the old random solver could never find these.
-    value, steps = solve([1, 2, 3, 4, 5, 6], 11)
-    assert (value, len(steps)) == (11, 1), (value, steps)
-    # Unreachable target -> closest value, not a crash.
-    value, _ = solve([1, 1, 1, 1, 1, 1], 999)
-    assert value == 9, value  # (1+1+1) * (1+1+1)
-    # 831 is provably unreachable from this set: expect the nearest value, 830.
-    t0 = time.perf_counter()
-    assert solve([1, 3, 7, 10, 25, 50], 831)[0] == 830
-    print(f"OK (worst case, full search: {time.perf_counter() - t0:.3f}s)")
-
-
 if __name__ == '__main__':
-    if '--test' in sys.argv:
-        test()
-        sys.exit()
-
     args = [int(a) for a in sys.argv[1:]]
     if args:
         *numbers, target = args
